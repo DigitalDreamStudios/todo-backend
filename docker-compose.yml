@@ -1,7 +1,7 @@
 version: '3'
 services:
   backend:
-    image: cabreraevil/todo-backend
+    image: todo-backend
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,3 +9,15 @@ services:
     ports:
       - 3000:3000
     container_name: todo-backend
+    env_file:
+      - .env.production
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
