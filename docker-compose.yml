@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - 3000:3000
+      - 3000-3100:3000
     container_name: todo-backend
     env_file:
       - .env.production
