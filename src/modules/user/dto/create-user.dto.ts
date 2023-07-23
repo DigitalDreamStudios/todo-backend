@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, IsStrongPassword } from "class-validator";
+import { IsArray, IsEmail, IsNotEmpty, IsString, IsStrongPassword } from "class-validator";
+import { Todo } from "src/modules/todo/entities/todo.entity";
 
 export class CreateUserDto {
     @IsString()
@@ -22,4 +23,7 @@ export class CreateUserDto {
     @IsStrongPassword()
     @IsNotEmpty()
     readonly password: string;
+
+    @IsArray()
+    readonly todos: Todo[];
 }

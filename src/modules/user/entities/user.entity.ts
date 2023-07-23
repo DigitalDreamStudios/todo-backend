@@ -1,5 +1,7 @@
-import { Column, PrimaryGeneratedColumn } from "typeorm";
+import { Todo } from "src/modules/todo/entities/todo.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
+@Entity()
 export class User {
     @PrimaryGeneratedColumn()
     public id: number;
@@ -10,12 +12,15 @@ export class User {
     @Column()
     public lastName: string;
 
-    @Column()
+    @Column({unique: true})
     public username: string;
 
-    @Column()
+    @Column({unique: true})
     public email: string;
 
     @Column()
     public password: string;
+
+    @OneToMany(() => Todo, todo => todo.user_id)
+    public todos: Todo[];
 }

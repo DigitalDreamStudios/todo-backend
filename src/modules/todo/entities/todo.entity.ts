@@ -1,5 +1,7 @@
-import { Column, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "src/modules/user/entities/user.entity";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
+@Entity()
 export class Todo {
     @PrimaryGeneratedColumn()
     public id: number;
@@ -10,6 +12,10 @@ export class Todo {
     @Column()
     public description: string;
 
-    @Column()
+    @Column({default: false})
     public completed: boolean;
+
+    @ManyToOne(() => User, user => user.todos, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: "user_id" })
+    public user_id: number;
 }

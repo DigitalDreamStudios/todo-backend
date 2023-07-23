@@ -10,6 +10,9 @@ export class CreateTodoDto {
     readonly description: string;
 
     @IsString()
-    @IsNotEmpty()
     readonly completed: boolean;
+
+    @IsString()
+    @IsNotEmpty()
+    readonly userId: number;
 }
