@@ -32,4 +32,20 @@ export class CreateUserDto {
 
   @IsArray()
   readonly todos: Todo[];
+
+  constructor(
+    firstName: string,
+    lastName: string,
+    username: string,
+    email: string,
+    password: string,
+    todos: Todo[],
+  ) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.username = username;
+    this.email = email;
+    this.password = password;
+    this.todos = todos;
+  }
 }
