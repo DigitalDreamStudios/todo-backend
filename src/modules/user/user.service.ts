@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -12,33 +11,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) { }
-
-  async create(createUserDto: CreateUserDto): Promise<ApiResponse> {
-    try {
-      const newUser = this.userRepository.create(createUserDto);
-
-      // Encrypt password
-      newUser.password = await bcrypt.hash(newUser.password, 10);
-
-      await this.userRepository.save(newUser);
-
-      return {
-        statusCode: HttpStatus.CREATED,
-        message: 'User created successfully',
-        data: newUser,
-      };
-    } catch (error) {
-      // Check if the error is due to a unique constraint violation (duplicate data)
-      if (error.code === '23505') { // PostgreSQL error code for unique constraint violation
-        throw new HttpException('Username or Email already exist', HttpStatus.CONFLICT)
-      } else {
-        // Handle other errors (e.g., database connection issues, etc.)
-        // You might want to log the error for debugging purposes.
-        throw new HttpException('Something went wrong, try again later!', HttpStatus.INTERNAL_SERVER_ERROR)
-      }
-    }
-  }
+  ) {}
 
   async findAll(): Promise<ApiResponse> {
     const users = await this.userRepository.find();
@@ -47,7 +20,7 @@ export class UserService {
       statusCode: HttpStatus.OK,
       message: 'Users fetched successfully',
       data: users,
-    }
+    };
   }
 
   async findOne(id: number): Promise<ApiResponse> {
@@ -64,7 +37,7 @@ export class UserService {
       statusCode: HttpStatus.OK,
       message: 'User fetched successfully',
       data: findUser,
-    }
+    };
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<ApiResponse> {
@@ -87,7 +60,7 @@ export class UserService {
       statusCode: HttpStatus.OK,
       message: 'User updated successfully',
       data: updatedUser,
-    }
+    };
   }
 
   async remove(id: number): Promise<ApiResponse> {
@@ -105,6 +78,6 @@ export class UserService {
       statusCode: HttpStatus.OK,
       message: 'User deleted successfully',
       data: findUser,
-    }
+    };
   }
 }

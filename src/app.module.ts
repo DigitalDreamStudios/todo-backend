@@ -7,13 +7,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { DatabaseModule } from './config/database.config';
 
 @Module({
-  imports: [
-    TodoModule,
-    UserModule,
-    AuthModule,
-    DatabaseModule
-  ],
+  imports: [TodoModule, UserModule, AuthModule, DatabaseModule],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

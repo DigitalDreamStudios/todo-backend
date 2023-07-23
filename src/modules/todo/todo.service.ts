@@ -14,7 +14,7 @@ export class TodoService {
     private readonly todoRepository: Repository<Todo>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async create(createTodoDto: CreateTodoDto): Promise<ApiResponse> {
     // Step 1: Fetch the user entity using the user ID from createTodoDto
@@ -47,7 +47,7 @@ export class TodoService {
       statusCode: HttpStatus.OK,
       message: 'Todos fetched successfully',
       data: todos,
-    }
+    };
   }
 
   async findOne(id: number): Promise<ApiResponse> {
@@ -63,13 +63,13 @@ export class TodoService {
       statusCode: HttpStatus.OK,
       message: 'Todo fetched successfully',
       data: findTodo,
-    }
+    };
   }
 
   async update(id: number, updateTodoDto: UpdateTodoDto): Promise<ApiResponse> {
     const findTodo = await this.todoRepository.findOne({
-      where: { id }
-    })
+      where: { id },
+    });
 
     if (!findTodo) {
       throw new HttpException('Todo not found', HttpStatus.NOT_FOUND);
@@ -77,20 +77,20 @@ export class TodoService {
 
     const updatedTodo = await this.todoRepository.save({
       ...findTodo,
-      ...updateTodoDto
-    })
+      ...updateTodoDto,
+    });
 
     return {
       statusCode: HttpStatus.OK,
       message: 'Todo updated successfully',
-      data: updatedTodo
-    }
+      data: updatedTodo,
+    };
   }
 
   async remove(id: number): Promise<ApiResponse> {
     const findTodo = await this.todoRepository.findOne({
-      where: { id }
-    })
+      where: { id },
+    });
 
     if (!findTodo) {
       throw new HttpException('Todo not found', HttpStatus.NOT_FOUND);
@@ -102,6 +102,6 @@ export class TodoService {
       statusCode: HttpStatus.OK,
       message: 'Todo deleted successfully',
       data: findTodo,
-    }
+    };
   }
 }
