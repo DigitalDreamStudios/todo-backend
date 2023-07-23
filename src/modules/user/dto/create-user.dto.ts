@@ -1,11 +1,9 @@
 import {
-  IsArray,
   IsEmail,
   IsNotEmpty,
   IsString,
   IsStrongPassword,
 } from 'class-validator';
-import { Todo } from 'src/modules/todo/entities/todo.entity';
 
 export class CreateUserDto {
   @IsString()
@@ -26,12 +24,15 @@ export class CreateUserDto {
   readonly email: string;
 
   @IsString()
-  @IsStrongPassword()
+  @IsStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1,
+  })
   @IsNotEmpty()
   readonly password: string;
-
-  @IsArray()
-  readonly todos: Todo[];
 
   constructor(
     firstName: string,
@@ -39,13 +40,11 @@ export class CreateUserDto {
     username: string,
     email: string,
     password: string,
-    todos: Todo[],
   ) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.username = username;
     this.email = email;
     this.password = password;
-    this.todos = todos;
   }
 }
