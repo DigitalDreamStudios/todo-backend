@@ -1,4 +1,12 @@
-import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiResponse } from 'src/common/types/ApiResponse.type';
@@ -12,8 +20,8 @@ export class UserController {
     return this.userService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<ApiResponse> {
+  @Get('filter')
+  findOne(@Query('id') id: string): Promise<ApiResponse> {
     return this.userService.findOne(+id);
   }
 

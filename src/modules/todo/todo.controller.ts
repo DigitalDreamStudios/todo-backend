@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { TodoService } from './todo.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
@@ -26,8 +27,8 @@ export class TodoController {
     return this.todoService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string): Promise<ApiResponse> {
+  @Get('filter')
+  findOne(@Query('id') id: string): Promise<ApiResponse> {
     return this.todoService.findOne(+id);
   }
 
