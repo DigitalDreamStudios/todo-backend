@@ -5,15 +5,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { ApiResponse } from 'src/common/types/ApiResponse.type';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async login(createAuthDto: CreateAuthDto) {
+  async validateUser(createAuthDto: CreateAuthDto): Promise<User> {
     // Validate username and hashed password
     const user = await this.userRepository.findOne({
       where: { username: createAuthDto.username },
@@ -32,14 +35,10 @@ export class AuthService {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
 
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'User authenticated successfully',
-      data: user,
-    };
+    return user;
   }
 
-  async register(createUserDto: CreateUserDto) {
+  async register(createUserDto: CreateUserDto): Promise<ApiResponse> {
     try {
       const newUser = this.userRepository.create(createUserDto);
 
@@ -70,5 +69,19 @@ export class AuthService {
         );
       }
     }
+  }
+
+  async login(user: CreateAuthDto): Promise<ApiResponse> {
+    const findUser = await this.validateUser(user);
+    const payload = { username: findUser.username, sub: findUser.id };
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'User logged in successfully',
+      data: {
+        ...findUser,
+        access_token: this.jwtService.sign(payload),
+      },
+    };
   }
 }
