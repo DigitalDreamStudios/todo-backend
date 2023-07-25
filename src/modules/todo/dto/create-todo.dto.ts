@@ -12,7 +12,7 @@ export class CreateTodoDto {
   readonly title: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   readonly description: string;
 
   @IsBoolean()
