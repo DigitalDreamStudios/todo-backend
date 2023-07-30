@@ -1,16 +1,23 @@
-import * as dotenv from 'dotenv';
-import { MongooseModuleOptions } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-// Load environment variables from the .env file
-dotenv.config();
-
-/**
- * Configuration options for connecting to a MongoDB database using Mongoose
- *
- * @property {string} uri - The connection URI for the database
- * @property {boolean} useNewUrlParser - Whether to use the new MongoDB connection string parser
- */
-export const databaseConfig: MongooseModuleOptions = {
-    uri: process.env.MONGODB_URI,
-    useNewUrlParser: true,
-};
+@Module({
+  imports: [
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('POSTGRES_HOST'),
+        port: configService.get('POSTGRES_PORT'),
+        username: configService.get('POSTGRES_USER'),
+        password: configService.get('POSTGRES_PASSWORD'),
+        database: configService.get('POSTGRES_DB'),
+        entities: ['dist/**/*.entity{.ts,.js}'],
+        synchronize: true,
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+})
+export class DatabaseModule {}

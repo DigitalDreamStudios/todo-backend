@@ -1,65 +1,83 @@
-import { Injectable } from '@nestjs/common';
-import { User } from './interface/user.interface';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/user.dto';
+import { ApiResponse } from 'src/common/types/ApiResponse.type';
 
 @Injectable()
 export class UserService {
-    constructor(@InjectModel('User') private readonly userModel: Model<User>) { }
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
-    /**
-     * Retrieves all User documents from the database
-     * @returns A Promise that resolves to an array of all Users
-     */
-    async getUsers(): Promise<User[]> {
-        const users = await this.userModel.find();
-        return users;
+  async findAll(): Promise<ApiResponse> {
+    const users = await this.userRepository.find();
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Users fetched successfully',
+      data: users,
+    };
+  }
+
+  async findOne(id: number): Promise<ApiResponse> {
+    const findUser = await this.userRepository.findOne({
+      where: { id },
+      relations: ['todos'], // Assuming the user entity has a 'todos' property representing the todos relationship
+    });
+
+    if (!findUser) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    /**
-     * Retrieves a single User document by ID from the database
-     * @param id - The ID of the User document to retrieve
-     * @returns A Promise that resolves to the retrieved User
-     */
-    async getUserById(id: string): Promise<User> {
-        const findUser = await this.userModel.findById(id);
-        return findUser;
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'User fetched successfully',
+      data: findUser,
+    };
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<ApiResponse> {
+    const findUser = await this.userRepository.findOne({
+      where: { id },
+    });
+
+    if (!findUser) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    /**
-     * Creates a new User document in the database
-     * @param createUserDto - The DTO containing the User information to create
-     * @returns A Promise that resolves to the newly created User
-     */
-    async createUser(createUserDto: CreateUserDto): Promise<User> {
-        const newUser = new this.userModel(createUserDto);
+    // Encrypt password
+    findUser.password = await bcrypt.hash(updateUserDto.password, 10);
 
-        // Hash the User's password using bcrypt before saving to the database
-        newUser.password = await bcrypt.hash(newUser.password, 10);
+    const updatedUser = await this.userRepository.save({
+      ...findUser,
+      ...updateUserDto,
+    });
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'User updated successfully',
+      data: updatedUser,
+    };
+  }
 
-        return newUser.save();
+  async remove(id: number): Promise<ApiResponse> {
+    const findUser = await this.userRepository.findOne({
+      where: { id },
+    });
+
+    if (!findUser) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    /**
-     * Updates an existing User document by ID in the database
-     * @param id - The ID of the User document to update
-     * @param createUserDto - The DTO containing the User information to update
-     * @returns A Promise that resolves to the updated User
-     */
-    async updateUserById(id: string, createUserDto: CreateUserDto): Promise<User> {
-        const updatedUser = await this.userModel.findByIdAndUpdate(id, createUserDto, { new: true });
-        return updatedUser;
-    }
+    await this.userRepository.remove(findUser);
 
-    /**
-     * Deletes an existing User document by ID from the database
-     * @param id - The ID of the User document to delete
-     * @returns A Promise that resolves to the deleted User
-     */
-    async deleteUserById(id: string): Promise<User> {
-        const deleteUser = await this.userModel.findByIdAndRemove(id);
-        return deleteUser;
-    }
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'User deleted successfully',
+      data: findUser,
+    };
+  }
 }

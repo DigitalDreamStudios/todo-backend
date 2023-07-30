@@ -1,22 +1,36 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateLoginDto } from './dto/login.auth.dto';
+import { CreateAuthDto } from './dto/create-auth.dto';
+import { CreateUserDto } from '../user/dto/create-user.dto';
+import { LocalAuthGuard } from 'src/common/guards/local-auth.guard';
+import { JwtAuthGuard } from 'src/common/guards/jwt.auth.guard';
+import { ApiResponse } from 'src/common/types/ApiResponse.type';
 
-/**
- * A controller responsible for handling authentication-related requests
- */
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
-    /**
-     * Endpoint for logging in a user
-     *
-     * @param {CreateLoginDto} createLoginDto - An object containing the user's login credentials
-     * @returns A Promise that resolves to an object containing a JSON Web Token and the user's information
-     */
-    @Post('login')
-    async login(@Body() createLoginDto: CreateLoginDto) {
-        return this.authService.login(createLoginDto);
-    }
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  login(@Body() createAuthDto: CreateAuthDto): Promise<ApiResponse> {
+    return this.authService.login(createAuthDto);
+  }
+
+  @Post('register')
+  register(@Body() createUserDto: CreateUserDto) {
+    return this.authService.register(createUserDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Request() req): Promise<ApiResponse> {
+    return req.user;
+  }
 }
