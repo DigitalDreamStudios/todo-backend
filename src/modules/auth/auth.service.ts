@@ -1,41 +1,87 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { CreateAuthDto } from './dto/create-auth.dto';
+import { CreateUserDto } from '../user/dto/create-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '../user/entities/user.entity';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { CreateLoginDto } from './dto/login.auth.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { User } from '../user/class/user';
-import { Model } from 'mongoose';
-import { findOneByEmail } from 'src/common/helpers/findOneByEmail.helper';
-import { comparePassword } from 'src/common/helpers/comparePassword.helper';
+import { ApiResponse } from 'src/common/types/ApiResponse.type';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private readonly jwtService: JwtService,
-        @InjectModel(User.name) private readonly userModel: Model<User>
-    ) { }
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
+  ) {}
 
-    /**
-     * Authenticates a user and returns a signed JSON Web Token (JWT)
-     *
-     * @param {CreateLoginDto} createLoginDto - An object containing the user's login credentials
-     * @returns A Promise that resolves to an object containing a signed JWT and the user's information
-     */
-    async login(createLoginDto: CreateLoginDto) {
-        const { email, password } = createLoginDto;
+  async validateUser(createAuthDto: CreateAuthDto): Promise<User> {
+    // Validate username and hashed password
+    const user = await this.userRepository.findOne({
+      where: { username: createAuthDto.username },
+    });
 
-        // Find a user by their email
-        const findUser = await findOneByEmail(this.userModel, email);
-
-        // Check if the provided password matches the user's stored password
-        const checkPassword = await comparePassword(password, findUser.password)
-
-        // Create a JWT payload using the user's email
-        const payload = { userEmail: createLoginDto.email };
-
-        // Return the user object and a signed JWT access token
-        return {
-            user: findUser,
-            access_token: this.jwtService.sign(payload),
-        };
+    if (!user) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
+
+    const isPasswordValid = await bcrypt.compare(
+      createAuthDto.password,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
+
+    return user;
+  }
+
+  async register(createUserDto: CreateUserDto): Promise<ApiResponse> {
+    try {
+      const newUser = this.userRepository.create(createUserDto);
+
+      // Encrypt password
+      newUser.password = await bcrypt.hash(newUser.password, 10);
+
+      await this.userRepository.save(newUser);
+
+      return {
+        statusCode: HttpStatus.CREATED,
+        message: 'User created successfully',
+        data: newUser,
+      };
+    } catch (error) {
+      // Check if the error is due to a unique constraint violation (duplicate data)
+      if (error.code === '23505') {
+        // PostgreSQL error code for unique constraint violation
+        throw new HttpException(
+          'Username or Email already exist',
+          HttpStatus.CONFLICT,
+        );
+      } else {
+        // Handle other errors (e.g., database connection issues, etc.)
+        // You might want to log the error for debugging purposes.
+        throw new HttpException(
+          'Something went wrong, try again later!',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
+  async login(user: CreateAuthDto): Promise<ApiResponse> {
+    const findUser = await this.validateUser(user);
+    const payload = { username: findUser.username, sub: findUser.id };
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'User logged in successfully',
+      data: {
+        ...findUser,
+        access_token: this.jwtService.sign(payload),
+      },
+    };
+  }
 }

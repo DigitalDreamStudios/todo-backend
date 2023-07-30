@@ -1,20 +1,20 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TodoModule } from './modules/todo/todo.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import { databaseConfig } from './config/database.config';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { DatabaseModule } from './config/database.config';
 
 @Module({
-  imports: [
-    TodoModule,
-    UserModule,
-    AuthModule,
-    MongooseModule.forRoot(databaseConfig.uri),
-  ],
+  imports: [TodoModule, UserModule, AuthModule, DatabaseModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: 'APP_PIPE',
+      useClass: ValidationPipe,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule {}
