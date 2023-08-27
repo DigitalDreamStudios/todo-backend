@@ -1,18 +1,18 @@
 version: '3'
 services:
   backend:
-    image: todo-backend
+    image: todo-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
+    restart: on-failure
     ports:
       - 3002:3000
     container_name: todo-backend
     env_file:
       - .env.production
     depends_on:
-      - db
+      - database
     networks:
       - todo-network
     deploy:
@@ -26,21 +26,28 @@ services:
         max-size: '10m'
         max-file: '3'
 
-  db:
-    image: postgres
+  database:
+    image: postgres:latest
     restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
     ports:
       - '5432:5432'
     container_name: postgres
+    env_file:
+      - .env.production
+    environment:
+      - POSTGRES_USER={POSTGRES_USER}
+      - POSTGRES_PASSWORD={POSTGRES_PASSWORD}
     volumes:
-      - db:/var/lib/postgresql/data
+      - database:/var/lib/postgresql/data
     networks:
       - todo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 256M
 volumes:
-  db:
+  database:
     driver: local
 
 networks:
