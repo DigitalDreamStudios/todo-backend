@@ -34,9 +34,6 @@ services:
     container_name: postgres
     env_file:
       - .env.production
-    environment:
-      - POSTGRES_USER={POSTGRES_USER}
-      - POSTGRES_PASSWORD={POSTGRES_PASSWORD}
     volumes:
       - database:/var/lib/postgresql/data
     networks:
