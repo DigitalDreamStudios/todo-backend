@@ -11,8 +11,6 @@ services:
     container_name: todo-backend
     env_file:
       - .env.production
-    depends_on:
-      - database
     networks:
       - todo-network
     deploy:
@@ -25,28 +23,3 @@ services:
       options:
         max-size: '10m'
         max-file: '3'
-
-  database:
-    image: postgres:latest
-    restart: always
-    ports:
-      - '5432:5432'
-    container_name: postgres
-    env_file:
-      - .env.production
-    volumes:
-      - database:/var/lib/postgresql/data
-    networks:
-      - todo-network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.2'
-          memory: 256M
-volumes:
-  database:
-    driver: local
-
-networks:
-  todo-network:
-    driver: bridge
